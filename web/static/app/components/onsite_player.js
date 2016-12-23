@@ -3,6 +3,7 @@ import Episode from "components/episode";
 import Log from "components/log";
 import ChangelogAudio from "components/audio";
 import Playbar from "components/playbar";
+import Toast from "components/toast";
 
 export default class OnsitePlayer {
   constructor(selector) {
@@ -61,10 +62,17 @@ export default class OnsitePlayer {
           break;
         case 32: // space bar
           event.preventDefault();
-          this.togglePlayPause();
+          if (this.isPlaying()) {
+            this.pause();
+            Toast.image("paused");
+          } else {
+            this.play();
+            Toast.image("playing");
+          }
           break;
         case 83: // s
           this.changeSpeed();
+          Toast.text(this.speed() + "x");
           break;
         default:
       }
@@ -106,6 +114,10 @@ export default class OnsitePlayer {
 
   changeSpeed() {
     this.audio.changeSpeed();
+  }
+
+  speed() {
+   return this.audio.speed();
   }
 
   seekBy(to) {

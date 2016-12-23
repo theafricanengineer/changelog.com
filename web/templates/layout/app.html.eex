@@ -47,5 +47,6 @@
     <%= render("_overlay.html", assigns) %>
     <%= render("_footer.html", assigns) %>
     <%= render("_player.html", assigns) %>
+    <div class="toast"></div>
   </body>
 </html>
