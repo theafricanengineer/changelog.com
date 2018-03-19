@@ -1,8 +1,8 @@
 defmodule ChangelogWeb.Admin.EpisodeController do
   use ChangelogWeb, :controller
 
-  alias Changelog.{Episode, EpisodeTopic, EpisodeHost, EpisodeStat, Mailer,
-                   NewsItem, Podcast, Transcripts}
+  alias Changelog.{Episodes, Episode, EpisodeTopic, EpisodeHost, EpisodeStat,
+                   Mailer, NewsItem, Podcast, Transcripts}
   alias ChangelogWeb.Email
 
   plug :assign_podcast
@@ -91,12 +91,7 @@ defmodule ChangelogWeb.Admin.EpisodeController do
   end
 
   def create(conn, params = %{"episode" => episode_params}, podcast) do
-    changeset =
-      build_assoc(podcast, :episodes)
-      |> Episode.preload_all
-      |> Episode.admin_changeset(episode_params)
-
-    case Repo.insert(changeset) do
+    case Episodes.create(episode_params, podcast) do
       {:ok, _episode} ->
         conn
         |> put_flash(:result, "success")
