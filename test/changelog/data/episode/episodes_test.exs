@@ -8,7 +8,7 @@ defmodule Changelog.EpisodesTest do
   alias Changelog.{CalendarEvent, CalendarService}
 
   test "when create an episode a calendar event is created" do
-    with_mock(CalendarService, [create: fn(_) -> {:ok} end]) do
+    with_mock(CalendarService, [create: fn(_) -> {:ok, "EVENT_ID"} end]) do
       episode_params = %{slug: "181", title: "some content", recorded_at: hours_ago(1)}
       podcast = build(:podcast)
 
@@ -20,9 +20,10 @@ defmodule Changelog.EpisodesTest do
         notes: "Setup guide: https://changelog.com/guest/#{podcast.slug}"
       }
 
-      Episodes.create(episode_params, podcast)
+      {:ok, episode} = Episodes.create(episode_params, podcast)
 
       assert called CalendarService.create(expected_event)
+      assert episode.calendar_event_id == "EVENT_ID"
     end
   end
 end
