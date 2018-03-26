@@ -6,9 +6,11 @@ defmodule Changelog.Episodes do
 
   def create(episode_params, podcast, calendar_service \\ CalendarService) do
     event_start = Map.get(episode_params, :recorded_at)
-    {:ok, event_id} = calendar_service.create(CalendarEvent.build_for(podcast, event_start))
 
-    episode_params = add_param_to(episode_params, "calendar_event_id", event_id)
+    episode_params = case calendar_service.create(CalendarEvent.build_for(podcast, event_start)) do
+      {:ok, event_id} -> add_param_to(episode_params, "calendar_event_id", event_id)
+      {:error, _message} -> episode_params
+    end
 
     changeset =
       build_assoc(podcast, :episodes)
