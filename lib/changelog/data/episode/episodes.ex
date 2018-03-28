@@ -5,30 +5,17 @@ defmodule Changelog.Episodes do
   alias Changelog.{CalendarService, CalendarEvent}
 
   def create(episode_params, podcast, calendar_service \\ CalendarService) do
-    event_start = Map.get(episode_params, :recorded_at)
+    event_start = Map.get(episode_params, :recorded_at) || Map.get(episode_params, "recorded_at")
 
-    episode_params = case calendar_service.create(CalendarEvent.build_for(podcast, event_start)) do
-      {:ok, event_id} -> add_param_to(episode_params, "calendar_event_id", event_id)
-      {:error, _message} -> episode_params
+    event_id = case calendar_service.create(CalendarEvent.build_for(podcast, event_start)) do
+      {:ok, event_id} -> event_id
+      {:error, _message} -> nil
     end
 
-    changeset =
-      build_assoc(podcast, :episodes)
-      |> Episode.preload_all
-      |> Episode.admin_changeset(episode_params)
-
-    Repo.insert(changeset)
-  end
-
-  defp add_param_to(params, key, value) do
-    [head|_] = Map.keys(params)
-    add_param_to(params, key, value, is_atom(head))
-  end
-
-  defp add_param_to(params, key, value, is_atom) when is_atom do
-    Map.put(params, String.to_atom(key), value)
-  end
-  defp add_param_to(params, key, value, _is_atom) do
-    Map.put(params, key, value)
+    build_assoc(podcast, :episodes)
+    |> Episode.add_calendar_event_id(event_id)
+    |> Episode.preload_all
+    |> Episode.admin_changeset(episode_params)
+    |> Repo.insert
   end
 end
