@@ -5,12 +5,17 @@ defmodule Changelog.Episodes do
   alias Changelog.{CalendarService, CalendarEvent}
 
   def create(episode_params, podcast, calendar_service \\ CalendarService) do
-    episode = build_assoc(podcast, :episodes)
+    result = build_assoc(podcast, :episodes)
       |> Episode.preload_all
       |> Episode.admin_changeset(episode_params)
-      |> Repo.insert!
+      |> Repo.insert
 
-    publish_calendar_event_for(episode, calendar_service)
+    case result do
+      {:ok, episode} ->
+        publish_calendar_event_for(episode, calendar_service)
+      _ ->
+        result
+    end
   end
 
   defp publish_calendar_event_for(episode, calendar_service) do
