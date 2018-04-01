@@ -193,8 +193,9 @@ defmodule Changelog.Episode do
     |> Repo.update!
   end
 
-  def add_calendar_event_id(episode, event_id) do
+  def update_calendar_event_id(episode, event_id) do
     change(episode, calendar_event_id: event_id)
+    |> Repo.update
   end
 
   defp derive_bytes_and_duration(changeset) do

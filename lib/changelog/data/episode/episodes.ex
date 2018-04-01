@@ -11,21 +11,15 @@ defmodule Changelog.Episodes do
       |> Repo.insert
 
     case result do
-      {:ok, episode} ->
-        publish_calendar_event_for(episode, calendar_service)
-      _ ->
-        result
+      {:ok, episode} -> publish_calendar_event_for(episode, calendar_service)
+      _ -> result
     end
   end
 
   defp publish_calendar_event_for(episode, calendar_service) do
-    event_id = case calendar_service.create(CalendarEvent.build_for(episode)) do
-      {:ok, event_id} -> event_id
-      {:error, _reason} -> nil
+    case calendar_service.create(CalendarEvent.build_for(episode)) do
+      {:ok, event_id} -> Episode.update_calendar_event_id(episode, event_id)
+      {:error, _reason} -> {:ok, episode}
     end
-
-    Repo.get!(Episode, episode.id)
-      |> Episode.add_calendar_event_id(event_id)
-      |> Repo.update
   end
 end
