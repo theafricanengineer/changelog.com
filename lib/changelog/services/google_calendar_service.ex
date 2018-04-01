@@ -26,9 +26,7 @@ defmodule Changelog.Services.GoogleCalendarService do
       end: %{
         dateTime: add_minutes_to(event.start, event.duration) |> Timex.format!("{ISO:Extended}"),
       },
-      attendees: [
-        %{email: "joebew42@gmail.com"}
-      ],
+      attendees: event.attendees,
       reminders: %{
         useDefault: true
       }

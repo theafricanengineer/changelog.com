@@ -32,6 +32,9 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
     assert google_calendar_event.location == calendar_event.location
     assert google_calendar_event.start.dateTime == Timex.format!(calendar_event.start, "{ISO:Extended}")
     assert google_calendar_event.end.dateTime == Timex.format!(Timex.add(calendar_event.start, Timex.Duration.from_minutes(calendar_event.duration)), "{ISO:Extended}")
+
+    Enum.map(google_calendar_event.attendees, & &1.email)
+    |> Enum.each(& assert Enum.member?(calendar_event.attendees, %{email: &1}))
   end
 
   defp google_api_connection do
