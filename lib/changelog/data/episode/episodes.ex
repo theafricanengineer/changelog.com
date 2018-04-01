@@ -5,17 +5,22 @@ defmodule Changelog.Episodes do
   alias Changelog.{CalendarService, CalendarEvent}
 
   def create(episode_params, podcast, calendar_service \\ CalendarService) do
-    event_start = Map.get(episode_params, :recorded_at) || Map.get(episode_params, "recorded_at")
+    episode = build_assoc(podcast, :episodes)
+      |> Episode.preload_all
+      |> Episode.admin_changeset(episode_params)
+      |> Repo.insert!
 
-    event_id = case calendar_service.create(CalendarEvent.build_for(podcast, event_start)) do
+    publish_calendar_event_for(episode, calendar_service)
+  end
+
+  defp publish_calendar_event_for(episode, calendar_service) do
+    event_id = case calendar_service.create(CalendarEvent.build_for(episode)) do
       {:ok, event_id} -> event_id
-      {:error, _message} -> nil
+      {:error, _reason} -> nil
     end
 
-    build_assoc(podcast, :episodes)
-    |> Episode.add_calendar_event_id(event_id)
-    |> Episode.preload_all
-    |> Episode.admin_changeset(episode_params)
-    |> Repo.insert
+    Repo.get!(Episode, episode.id)
+      |> Episode.add_calendar_event_id(event_id)
+      |> Repo.update
   end
 end

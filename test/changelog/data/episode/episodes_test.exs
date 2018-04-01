@@ -4,14 +4,15 @@ defmodule Changelog.EpisodesTest do
   import Mock
   import ChangelogWeb.TimeView, only: [hours_ago: 1]
 
+  alias Changelog.{CalendarService, CalendarEvent}
+
   alias Changelog.Episodes
-  alias Changelog.{CalendarEvent, CalendarService}
 
   describe "when create an episode" do
     test "and a calendar event is successfully created a calendar event id is saved" do
       with_mock(CalendarService, [create: fn(_) -> {:ok, "EVENT_ID"} end]) do
         episode_params = %{slug: "181", title: "some content", recorded_at: hours_ago(1)}
-        podcast = build(:podcast)
+        podcast = insert(:podcast)
 
         expected_event = %CalendarEvent{
           name: "Recording '#{podcast.name}'",
@@ -31,7 +32,7 @@ defmodule Changelog.EpisodesTest do
     test "and a calendar event is not created a calendar event id is not saved" do
       with_mock(CalendarService, [create: fn(_) -> {:error, "unable to create the event"} end]) do
         episode_params = %{slug: "181", title: "some content", recorded_at: hours_ago(1)}
-        podcast = build(:podcast)
+        podcast = insert(:podcast)
 
         expected_event = %CalendarEvent{
           name: "Recording '#{podcast.name}'",

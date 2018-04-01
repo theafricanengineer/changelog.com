@@ -194,7 +194,7 @@ defmodule Changelog.Episode do
   end
 
   def add_calendar_event_id(episode, event_id) do
-    %__MODULE__{episode | calendar_event_id: event_id}
+    change(episode, calendar_event_id: event_id)
   end
 
   defp derive_bytes_and_duration(changeset) do

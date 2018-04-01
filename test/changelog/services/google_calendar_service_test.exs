@@ -1,7 +1,7 @@
 defmodule Changelog.Services.GoogleCalendarServiceTest do
-  use ExUnit.Case, async: true
+  use Changelog.DataCase
 
-  alias Changelog.{Podcast, CalendarEvent}
+  alias Changelog.{Episode, CalendarEvent}
 
   alias Changelog.Services.GoogleCalendarService
 
@@ -9,9 +9,12 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
   @google_calendar_timezone "Europe/Rome"
 
   test "#create" do
-    podcast = %Podcast{name: "a podcast", slug: "a podcast slug"}
-    start_datetime = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, @google_calendar_timezone)
-    calendar_event = CalendarEvent.build_for(podcast, start_datetime)
+    recorded_at = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, @google_calendar_timezone)
+    calendar_event = insert(:episode, recorded_at: recorded_at)
+      |> with_episode_host
+      |> with_episode_guest
+      |> Episode.preload_all
+      |> CalendarEvent.build_for
 
     {:ok, event_id} = GoogleCalendarService.create(calendar_event)
 
@@ -34,5 +37,15 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
   defp google_api_connection do
     {:ok, token} = Goth.Token.for_scope("https://www.googleapis.com/auth/calendar")
     GoogleApi.Calendar.V3.Connection.new(token.token)
+  end
+
+  defp with_episode_host(episode) do
+    insert(:episode_host, episode: episode)
+    episode
+  end
+
+  defp with_episode_guest(episode) do
+    insert(:episode_guest, episode: episode)
+    episode
   end
 end
