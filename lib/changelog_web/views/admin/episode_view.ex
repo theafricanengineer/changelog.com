@@ -29,7 +29,9 @@ defmodule ChangelogWeb.Admin.EpisodeView do
   end
 
   def calendar_event_label(episode) do
-    unless Episode.is_calendar_event_scheduled(episode) do
+    if Episode.is_calendar_event_scheduled(episode) do
+      content_tag :i, "", class: "calendar icon"
+    else
       content_tag :i, "", class: "red exclamation icon"
     end
   end
