@@ -1,13 +1,21 @@
 defmodule Changelog.Services.GoogleCalendarService do
   alias Changelog.CalendarEvent
 
-  @google_calendar_id "bdo60t3hcbpqsgkehhef8j9sqo@group.calendar.google.com"
+  @google_calendar_id Application.get_env(:changelog, Changelog.CalendarService)[:google_calendar_id]
 
   def create(event = %CalendarEvent{}) do
+    try do
+      {:ok, create!(event)}
+    rescue
+      _error -> {:error, "Unable to create the calendar event"}
+    end
+  end
+
+  defp create!(event = %CalendarEvent{}) do
     {:ok, %GoogleApi.Calendar.V3.Model.Event{id: event_id}} = google_connection()
       |> GoogleApi.Calendar.V3.Api.Events.calendar_events_insert(@google_calendar_id, body: payload_for(event))
 
-    {:ok, event_id}
+    event_id
   end
 
   defp google_connection do

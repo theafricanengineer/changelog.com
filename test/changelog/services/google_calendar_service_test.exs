@@ -2,12 +2,11 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
   use ExUnit.Case, async: true
 
   alias Changelog.CalendarEvent
-
   alias Changelog.Services.GoogleCalendarService
 
-  @google_calendar_id "bdo60t3hcbpqsgkehhef8j9sqo@group.calendar.google.com"
+  @google_calendar_id Application.get_env(:changelog, Changelog.CalendarService)[:google_calendar_id]
 
-  test "#create" do
+  test "#create should return the event_id when success" do
     event_start_at = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, "UTC")
     calendar_event = %CalendarEvent{
       name: "A calendar event name",
@@ -22,6 +21,12 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
     {:ok, event_id} = GoogleCalendarService.create(calendar_event)
 
     assert has_been_created(calendar_event, {:with, event_id})
+  end
+
+  test "#create should return an error when fails" do
+    result = GoogleCalendarService.create(%CalendarEvent{})
+
+    assert result == {:error, "Unable to create the calendar event"}
   end
 
   defp has_been_created(calendar_event, {:with, event_id}) do
