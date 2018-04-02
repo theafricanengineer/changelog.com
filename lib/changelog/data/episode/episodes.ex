@@ -1,10 +1,12 @@
 defmodule Changelog.Episodes do
   use Changelog.Data
 
-  alias Changelog.Episode
-  alias Changelog.{CalendarService, CalendarEvent}
+  @calendar_service Application.get_env(:changelog, Changelog.CalendarService)[:adapter]
 
-  def create(episode_params, podcast, calendar_service \\ CalendarService) do
+  alias Changelog.Episode
+  alias Changelog.CalendarEvent
+
+  def create(episode_params, podcast, calendar_service \\ @calendar_service) do
     result = build_assoc(podcast, :episodes)
       |> Episode.preload_all
       |> Episode.admin_changeset(episode_params)
