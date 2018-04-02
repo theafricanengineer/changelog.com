@@ -82,6 +82,10 @@ defmodule Changelog.Episode do
     validated.valid? && !is_published(episode)
   end
 
+  def is_calendar_event_scheduled(episode) do
+    episode.recorded_at > Timex.now && episode.calendar_event_id != nil
+  end
+
   def admin_changeset(struct, params \\ %{}) do
     struct
     |> cast(params, ~w(slug title published featured headline subheadline highlight subhighlight summary notes published_at recorded_at recorded_live calendar_event_id guid))

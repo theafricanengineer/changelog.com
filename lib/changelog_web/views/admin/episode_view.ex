@@ -28,6 +28,12 @@ defmodule ChangelogWeb.Admin.EpisodeView do
     end
   end
 
+  def calendar_event_label(episode) do
+    unless Episode.is_calendar_event_scheduled(episode) do
+      content_tag :i, "", class: "red exclamation icon"
+    end
+  end
+
   def percent_of_downloads(episode, count) do
      ((count / episode.download_count) * 100) |> round
   end
