@@ -19,7 +19,11 @@ defmodule Changelog.Episodes do
   end
 
   defp publish_calendar_event_for(episode, calendar_service) do
-    case calendar_service.create(CalendarEvent.build_for(episode)) do
+    calendar_event = episode
+      |> Episode.preload_all
+      |> CalendarEvent.build_for
+
+    case calendar_service.create(calendar_event) do
       {:ok, event_id} -> Episode.update_calendar_event_id(episode, event_id)
       {:error, _reason} -> {:ok, episode}
     end

@@ -8,14 +8,28 @@ defmodule Changelog.EpisodesTest do
   alias Changelog.Episodes
 
   setup do
-    episode_params = %{slug: "181", title: "some content", recorded_at: hours_ago(1)}
     podcast = insert(:podcast)
+    guest = insert(:person)
+    episode_params = %{
+      slug: "181",
+      title: "some content",
+      recorded_at: hours_ago(1),
+      episode_guests: [
+        %{
+          person_id: guest.id,
+          position: 1
+        }
+      ]
+    }
     expected_event = %CalendarEvent{
       name: "Recording '#{podcast.name}'",
       start: Map.get(episode_params, :recorded_at),
       duration: 90,
       location: "Skype",
-      notes: "Setup guide: https://changelog.com/guest/#{podcast.slug}"
+      notes: "Setup guide: https://changelog.com/guest/#{podcast.slug}",
+      attendees: [
+        %{email: guest.email}
+      ]
     }
 
     %{
