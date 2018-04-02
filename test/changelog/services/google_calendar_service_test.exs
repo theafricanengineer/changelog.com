@@ -1,10 +1,11 @@
 defmodule Changelog.Services.GoogleCalendarServiceTest do
   use ExUnit.Case, async: true
+  @moduletag :external
+
+  @google_calendar_id Application.get_env(:changelog, Changelog.CalendarService)[:google_calendar_id]
 
   alias Changelog.CalendarEvent
   alias Changelog.Services.GoogleCalendarService
-
-  @google_calendar_id Application.get_env(:changelog, Changelog.CalendarService)[:google_calendar_id]
 
   test "#create should return the event_id when success" do
     event_start_at = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, "UTC")
