@@ -11,14 +11,10 @@ defmodule Changelog.Episodes do
       |> Episode.preload_all
       |> Episode.admin_changeset(episode_params)
       |> Repo.insert
-
-    case result do
-      {:ok, episode} -> publish_calendar_event_for(episode)
-      _ -> result
-    end
+      |> publish_calendar_event_for
   end
 
-  defp publish_calendar_event_for(episode) do
+  defp publish_calendar_event_for({:ok, episode}) do
     calendar_event = episode
       |> Episode.preload_all
       |> CalendarEvent.build_for
@@ -28,4 +24,5 @@ defmodule Changelog.Episodes do
       {:error, _reason} -> {:ok, episode}
     end
   end
+  defp publish_calendar_event_for(result), do: result
 end
