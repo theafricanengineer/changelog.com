@@ -58,4 +58,16 @@ defmodule Changelog.EpisodesTest do
       end
     end
   end
+
+  describe "when delete an episode" do
+    test "with an attached calendar event it will be also removed" do
+      episode = insert(:episode, calendar_event_id: "EVENT_ID")
+
+      with_mock(CalendarService, [delete: fn(_) -> {:ok} end]) do
+        Episodes.delete(episode.slug, episode.podcast)
+
+        assert called CalendarService.delete("EVENT_ID")
+      end
+    end
+  end
 end

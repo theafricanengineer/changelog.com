@@ -18,7 +18,8 @@ defmodule Changelog.Episodes do
     assoc(podcast, :episodes)
       |> Episode.unpublished
       |> Repo.get_by!(slug: slug)
-      |> Repo.delete!
+      |> Repo.delete
+      |> unpublish_calendar_event_for
   end
 
   defp publish_calendar_event_for({:ok, episode}) do
@@ -32,4 +33,9 @@ defmodule Changelog.Episodes do
     end
   end
   defp publish_calendar_event_for(result), do: result
+
+  defp unpublish_calendar_event_for({:ok, episode}) do
+    @calendar_service.delete(episode.calendar_event_id)
+    episode
+  end
 end
