@@ -11,6 +11,14 @@ defmodule Changelog.Services.GoogleCalendarService do
     end
   end
 
+  def delete(nil), do: {:ok}
+  def delete(event_id) do
+    google_connection()
+      |> GoogleApi.Calendar.V3.Api.Events.calendar_events_delete(@google_calendar_id, event_id)
+
+    {:ok}
+  end
+
   defp create!(event = %CalendarEvent{}) do
     {:ok, %GoogleApi.Calendar.V3.Model.Event{id: event_id}} = google_connection()
       |> GoogleApi.Calendar.V3.Api.Events.calendar_events_insert(@google_calendar_id, body: payload_for(event))

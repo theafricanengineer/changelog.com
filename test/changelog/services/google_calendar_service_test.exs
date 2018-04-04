@@ -7,27 +7,48 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
   alias Changelog.CalendarEvent
   alias Changelog.Services.GoogleCalendarService
 
-  test "#create should return the event_id when success" do
-    event_start_at = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, "UTC")
-    calendar_event = %CalendarEvent{
-      name: "A calendar event name",
-      start: event_start_at,
-      notes: "Some notes",
-      attendees: [
-        %{email: "an.attendee@somewhere.abc"},
-        %{email: "another.attendee@somewhere.abc"}
-      ]
-    }
+  describe "#create" do
+    test "should return the event_id when success" do
+      event_start_at = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, "UTC")
+      calendar_event = %CalendarEvent{
+        name: "A calendar event name",
+        start: event_start_at,
+        notes: "Some notes",
+        attendees: [
+          %{email: "an.attendee@somewhere.abc"},
+          %{email: "another.attendee@somewhere.abc"}
+        ]
+      }
 
-    {:ok, event_id} = GoogleCalendarService.create(calendar_event)
+      {:ok, event_id} = GoogleCalendarService.create(calendar_event)
 
-    assert has_been_created(calendar_event, {:with, event_id})
+      assert has_been_created(calendar_event, {:with, event_id})
+    end
+
+    test "should return an error when fails" do
+      result = GoogleCalendarService.create(%CalendarEvent{})
+
+      assert result == {:error, "Unable to create the calendar event"}
+    end
   end
 
-  test "#create should return an error when fails" do
-    result = GoogleCalendarService.create(%CalendarEvent{})
+  describe "#delete" do
+    test "should return :ok event we pass a nil value" do
+      assert {:ok} == GoogleCalendarService.delete(nil)
+    end
 
-    assert result == {:error, "Unable to create the calendar event"}
+    test "should remove an existing calendar event" do
+      event_start_at = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, "UTC")
+      calendar_event = %CalendarEvent{
+        name: "A calendar event name",
+        start: event_start_at
+      }
+      {:ok, event_id} = GoogleCalendarService.create(calendar_event)
+
+      {:ok} = GoogleCalendarService.delete(event_id)
+
+      has_been_deleted(event_id)
+    end
   end
 
   defp has_been_created(calendar_event, {:with, event_id}) do
@@ -44,6 +65,13 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
 
     Enum.map(google_calendar_event.attendees, & &1.email)
     |> Enum.each(& assert Enum.member?(calendar_event.attendees, %{email: &1}))
+  end
+
+  defp has_been_deleted(event_id) do
+    {:ok, google_calendar_event} = google_api_connection()
+      |> GoogleApi.Calendar.V3.Api.Events.calendar_events_get(@google_calendar_id, event_id)
+
+    assert google_calendar_event.status == "cancelled"
   end
 
   defp parse_as_utc_datetime(iso_date) do
