@@ -134,12 +134,7 @@ defmodule ChangelogWeb.Admin.EpisodeController do
   end
 
   def delete(conn, %{"id" => slug}, podcast) do
-    episode =
-      assoc(podcast, :episodes)
-      |> Episode.unpublished
-      |> Repo.get_by!(slug: slug)
-
-    Repo.delete!(episode)
+    Episodes.delete(slug, podcast)
 
     conn
     |> put_flash(:result, "success")

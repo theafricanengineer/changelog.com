@@ -7,11 +7,18 @@ defmodule Changelog.Episodes do
   alias Changelog.CalendarEvent
 
   def create(episode_params, podcast) do
-    result = build_assoc(podcast, :episodes)
+    build_assoc(podcast, :episodes)
       |> Episode.preload_all
       |> Episode.admin_changeset(episode_params)
       |> Repo.insert
       |> publish_calendar_event_for
+  end
+
+  def delete(slug, podcast) do
+    assoc(podcast, :episodes)
+      |> Episode.unpublished
+      |> Repo.get_by!(slug: slug)
+      |> Repo.delete!
   end
 
   defp publish_calendar_event_for({:ok, episode}) do
