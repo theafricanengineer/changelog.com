@@ -148,6 +148,10 @@ defmodule Changelog.EpisodeTest do
   end
 
   describe "is_calendar_event_scheduled" do
+    test "is false when episode does not have a recorded_at" do
+      refute Episode.is_calendar_event_scheduled(build(:episode, recorded_at: nil, calendar_event_id: nil))      
+    end
+
     test "is false when episode have a future recorded_at and no calendar event attached" do
       refute Episode.is_calendar_event_scheduled(build(:episode, recorded_at: hours_from_now(1), calendar_event_id: nil))
     end
