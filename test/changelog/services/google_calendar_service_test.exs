@@ -52,7 +52,8 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
   end
 
   defp has_been_created(calendar_event, {:with, event_id}) do
-    {:ok, google_calendar_event} = google_api_connection()
+    {:ok, google_calendar_event} =
+      google_api_connection()
       |> GoogleApi.Calendar.V3.Api.Events.calendar_events_get(@google_calendar_id, event_id)
 
     %GoogleApi.Calendar.V3.Model.Event{id: ^event_id} = google_calendar_event
@@ -64,19 +65,19 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
     assert parse_as_utc_datetime(google_calendar_event.end.dateTime) == Timex.add(calendar_event.start, Timex.Duration.from_minutes(calendar_event.duration))
 
     Enum.map(google_calendar_event.attendees, & &1.email)
-      |> Enum.each(& assert Enum.member?(calendar_event.attendees, %{email: &1}))
+    |> Enum.each(& assert Enum.member?(calendar_event.attendees, %{email: &1}))
   end
 
   defp has_been_deleted(event_id) do
     {:ok, google_calendar_event} = google_api_connection()
-      |> GoogleApi.Calendar.V3.Api.Events.calendar_events_get(@google_calendar_id, event_id)
+    |> GoogleApi.Calendar.V3.Api.Events.calendar_events_get(@google_calendar_id, event_id)
 
     assert google_calendar_event.status == "cancelled"
   end
 
   defp parse_as_utc_datetime(iso_date) do
     Timex.parse!(iso_date, "{ISO:Extended}")
-      |> Timex.Timezone.convert("UTC")
+    |> Timex.Timezone.convert("UTC")
   end
 
   defp google_api_connection do
