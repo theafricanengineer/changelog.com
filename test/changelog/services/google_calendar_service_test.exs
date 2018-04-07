@@ -33,7 +33,7 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
   end
 
   describe "#delete" do
-    test "should return :ok event we pass a nil value" do
+    test "should return :ok when we pass a nil value" do
       assert {:ok} == GoogleCalendarService.delete(nil)
     end
 
