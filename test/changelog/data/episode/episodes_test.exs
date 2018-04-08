@@ -23,7 +23,7 @@ defmodule Changelog.EpisodesTest do
     }
     expected_event = %CalendarEvent{
       name: "Recording '#{podcast.name}'",
-      start: Map.get(episode_params, :recorded_at),
+      start: episode_params.recorded_at,
       duration: 90,
       location: "Skype",
       notes: "Setup guide: https://changelog.com/guest/#{podcast.slug}",
@@ -41,7 +41,7 @@ defmodule Changelog.EpisodesTest do
 
   describe "when create an episode" do
     test "without a recording time a calendar event is not created", context do
-      with_mock(CalendarService, [create: fn(_) -> {:ok, "EVENT_ID"} end]) do
+      with_mock(CalendarService, []) do
         episode_params = %{context.episode_params | recorded_at: nil}
 
         {:ok, episode} = Episodes.create(episode_params, context.podcast)
