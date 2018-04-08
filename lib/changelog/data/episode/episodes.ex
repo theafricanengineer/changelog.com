@@ -11,7 +11,7 @@ defmodule Changelog.Episodes do
       |> Episode.preload_all
       |> Episode.admin_changeset(episode_params)
       |> Repo.insert
-      |> publish_calendar_event_for
+      |> create_calendar_event
   end
 
   def delete(slug, podcast) do
@@ -19,10 +19,10 @@ defmodule Changelog.Episodes do
       |> Episode.unpublished
       |> Repo.get_by!(slug: slug)
       |> Repo.delete
-      |> unpublish_calendar_event_for
+      |> delete_calendar_event
   end
 
-  defp publish_calendar_event_for({:ok, episode = %Changelog.Episode{recorded_at: recorded_at}}) when not is_nil(recorded_at) do
+  defp create_calendar_event({:ok, episode = %Changelog.Episode{recorded_at: recorded_at}}) when not is_nil(recorded_at) do
     calendar_event = episode
       |> Episode.preload_all
       |> CalendarEvent.build_for
@@ -32,11 +32,11 @@ defmodule Changelog.Episodes do
       {:error, _reason} -> {:ok, episode}
     end
   end
-  defp publish_calendar_event_for(result), do: result
+  defp create_calendar_event(result), do: result
 
-  defp unpublish_calendar_event_for({:ok, episode = %Changelog.Episode{calendar_event_id: calendar_event_id}}) when not is_nil(calendar_event_id) do
+  defp delete_calendar_event({:ok, episode = %Changelog.Episode{calendar_event_id: calendar_event_id}}) when not is_nil(calendar_event_id) do
     @calendar_service.delete(episode.calendar_event_id)
     {:ok, episode}
   end
-  defp unpublish_calendar_event_for(result), do: result
+  defp delete_calendar_event(result), do: result
 end
