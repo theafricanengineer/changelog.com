@@ -22,7 +22,7 @@ defmodule Changelog.Episodes do
       |> unpublish_calendar_event_for
   end
 
-  defp publish_calendar_event_for({:ok, episode}) do
+  defp publish_calendar_event_for({:ok, episode = %Changelog.Episode{recorded_at: recorded_at}}) when not is_nil(recorded_at) do
     calendar_event = episode
       |> Episode.preload_all
       |> CalendarEvent.build_for

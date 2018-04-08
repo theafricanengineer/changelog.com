@@ -40,6 +40,17 @@ defmodule Changelog.EpisodesTest do
   end
 
   describe "when create an episode" do
+    test "without a recording time a calendar event is not created", context do
+      with_mock(CalendarService, [create: fn(_) -> {:ok, "EVENT_ID"} end]) do
+        episode_params = %{context.episode_params | recorded_at: nil}
+
+        {:ok, episode} = Episodes.create(episode_params, context.podcast)
+
+        refute called CalendarService.create(%CalendarEvent{context.expected_event | start: nil})
+        assert episode.calendar_event_id == nil
+      end
+    end
+
     test "and a calendar event is successfully created a calendar event id is saved", context do
       with_mock(CalendarService, [create: fn(_) -> {:ok, "EVENT_ID"} end]) do
         {:ok, episode} = Episodes.create(context.episode_params, context.podcast)
