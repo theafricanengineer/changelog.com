@@ -9,10 +9,9 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
 
   describe "#create" do
     test "should return the event_id when success" do
-      event_start_at = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, "UTC")
       calendar_event = %CalendarEvent{
         name: "A calendar event name",
-        start: event_start_at,
+        start: an_event_date(),
         notes: "Some notes",
         attendees: [
           %{email: "an.attendee@somewhere.abc"},
@@ -34,12 +33,10 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
 
   describe "#delete" do
     test "should remove an existing calendar event" do
-      event_start_at = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, "UTC")
-      calendar_event = %CalendarEvent{
+      {:ok, event_id} = GoogleCalendarService.create(%CalendarEvent{
         name: "A calendar event name",
-        start: event_start_at
-      }
-      {:ok, event_id} = GoogleCalendarService.create(calendar_event)
+        start: an_event_date()
+      })
 
       {:ok} = GoogleCalendarService.delete(event_id)
 
@@ -48,9 +45,7 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
   end
 
   defp has_been_created(calendar_event, {:with, event_id}) do
-    {:ok, google_calendar_event} =
-      google_api_connection()
-      |> GoogleApi.Calendar.V3.Api.Events.calendar_events_get(@google_calendar_id, event_id)
+    {:ok, google_calendar_event} = google_calendar_event(event_id)
 
     %GoogleApi.Calendar.V3.Model.Event{id: ^event_id} = google_calendar_event
 
@@ -65,10 +60,19 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
   end
 
   defp has_been_deleted(event_id) do
-    {:ok, google_calendar_event} = google_api_connection()
-    |> GoogleApi.Calendar.V3.Api.Events.calendar_events_get(@google_calendar_id, event_id)
+    {:ok, google_calendar_event} = google_calendar_event(event_id)
 
     assert google_calendar_event.status == "cancelled"
+  end
+
+  defp google_calendar_event(id) do
+    google_api_connection()
+    |> GoogleApi.Calendar.V3.Api.Events.calendar_events_get(@google_calendar_id, id)
+  end
+
+  defp google_api_connection do
+    {:ok, token} = Goth.Token.for_scope("https://www.googleapis.com/auth/calendar")
+    GoogleApi.Calendar.V3.Connection.new(token.token)
   end
 
   defp parse_as_utc_datetime(iso_date) do
@@ -76,8 +80,5 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
     |> Timex.Timezone.convert("UTC")
   end
 
-  defp google_api_connection do
-    {:ok, token} = Goth.Token.for_scope("https://www.googleapis.com/auth/calendar")
-    GoogleApi.Calendar.V3.Connection.new(token.token)
-  end
+  defp an_event_date, do: Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, "UTC")
 end
