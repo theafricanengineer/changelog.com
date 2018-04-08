@@ -12,10 +12,13 @@ defmodule Changelog.Services.GoogleCalendarService do
   end
 
   def delete(event_id) do
-    google_connection()
-      |> GoogleApi.Calendar.V3.Api.Events.calendar_events_delete(@google_calendar_id, event_id)
+    try do
+      delete!(event_id)
+      {:ok}
+    rescue
+      _error -> {:error, "Unable to delete the calendar event"}
+    end
 
-    {:ok}
   end
 
   defp create!(event = %CalendarEvent{}) do
@@ -23,6 +26,12 @@ defmodule Changelog.Services.GoogleCalendarService do
       |> GoogleApi.Calendar.V3.Api.Events.calendar_events_insert(@google_calendar_id, body: payload_for(event))
 
     event_id
+  end
+
+  defp delete!(event_id) do
+    {:error, %Tesla.Env{status: 204}} =
+      google_connection()
+      |> GoogleApi.Calendar.V3.Api.Events.calendar_events_delete(@google_calendar_id, event_id)
   end
 
   defp google_connection do

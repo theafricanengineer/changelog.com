@@ -42,6 +42,12 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
 
       has_been_deleted(event_id)
     end
+
+    test "should return an error when fails" do
+      result = GoogleCalendarService.delete("NOT EXISTING ID")
+
+      assert result == {:error, "Unable to delete the calendar event"}
+    end
   end
 
   defp has_been_created(calendar_event, {:with, event_id}) do
