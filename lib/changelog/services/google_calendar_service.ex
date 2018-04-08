@@ -11,7 +11,6 @@ defmodule Changelog.Services.GoogleCalendarService do
     end
   end
 
-  def delete(nil), do: {:ok}
   def delete(event_id) do
     google_connection()
       |> GoogleApi.Calendar.V3.Api.Events.calendar_events_delete(@google_calendar_id, event_id)

@@ -33,10 +33,6 @@ defmodule Changelog.Services.GoogleCalendarServiceTest do
   end
 
   describe "#delete" do
-    test "should return :ok for a nil value" do
-      assert {:ok} == GoogleCalendarService.delete(nil)
-    end
-
     test "should remove an existing calendar event" do
       event_start_at = Timex.to_datetime({{2018, 4, 1}, {11, 00, 00}}, "UTC")
       calendar_event = %CalendarEvent{

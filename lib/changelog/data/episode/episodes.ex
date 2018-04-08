@@ -34,8 +34,9 @@ defmodule Changelog.Episodes do
   end
   defp publish_calendar_event_for(result), do: result
 
-  defp unpublish_calendar_event_for({:ok, episode}) do
+  defp unpublish_calendar_event_for({:ok, episode = %Changelog.Episode{calendar_event_id: calendar_event_id}}) when not is_nil(calendar_event_id) do
     @calendar_service.delete(episode.calendar_event_id)
-    episode
+    {:ok, episode}
   end
+  defp unpublish_calendar_event_for(result), do: result
 end
