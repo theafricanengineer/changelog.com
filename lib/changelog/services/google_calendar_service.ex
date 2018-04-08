@@ -18,7 +18,6 @@ defmodule Changelog.Services.GoogleCalendarService do
     rescue
       _error -> {:error, "Unable to delete the calendar event"}
     end
-
   end
 
   defp create!(event = %CalendarEvent{}) do
