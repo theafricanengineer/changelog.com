@@ -32,7 +32,7 @@ defmodule Changelog.Episodes do
 
     case Repo.update(changeset) do
       {:error, changeset} -> {:error, changeset, episode}
-      result -> result
+      result -> update_calendar_event(result, changeset)
     end
   end
 
@@ -47,6 +47,16 @@ defmodule Changelog.Episodes do
     end
   end
   defp create_calendar_event(result), do: result
+
+  defp update_calendar_event({:ok, episode = %Changelog.Episode{calendar_event_id: event_id}}, %Ecto.Changeset{changes: %{recorded_at: recorded_at}}) when not is_nil(event_id) and not is_nil(recorded_at) do
+    calendar_event = episode
+      |> Episode.preload_all
+      |> CalendarEvent.build_for
+
+    @calendar_service.update(event_id, calendar_event)
+    {:ok, episode}
+  end
+  defp update_calendar_event({:ok, episode}, _changeset), do: {:ok, episode}
 
   defp delete_calendar_event({:ok, episode = %Changelog.Episode{calendar_event_id: calendar_event_id}}) when not is_nil(calendar_event_id) do
     @calendar_service.delete(episode.calendar_event_id)

@@ -4,7 +4,7 @@ defmodule Changelog.EpisodesTest do
   import Mock
   import ChangelogWeb.TimeView, only: [hours_ago: 1]
 
-  alias Changelog.{CalendarService, CalendarEvent}
+  alias Changelog.{CalendarService, CalendarEvent, Episode}
   alias Changelog.Episodes
 
   setup do
@@ -70,6 +70,25 @@ defmodule Changelog.EpisodesTest do
     end
   end
 
+  describe "when update an episode" do
+    test "a calendar event is updated if recording time changes" do
+      one_hour_ago = hours_ago(1)
+      two_hours_ago = hours_ago(2)
+      episode =
+        insert(:episode, calendar_event_id: "EVENT_ID", recorded_at: two_hours_ago)
+        |> Episode.preload_all
+      expected_event =
+        CalendarEvent.build_for(episode)
+        |> that_starts(one_hour_ago)
+
+      with_mock(CalendarService, [update: fn(_, _) -> {:ok} end]) do
+        Episodes.update(%{recorded_at: one_hour_ago}, episode.podcast, episode.slug)
+
+        assert called CalendarService.update("EVENT_ID", expected_event)
+      end
+    end
+  end
+
   describe "when delete an episode" do
     test "no calendar event is removed if not attached" do
       episode = insert(:episode, calendar_event_id: nil)
@@ -90,5 +109,9 @@ defmodule Changelog.EpisodesTest do
         assert called CalendarService.delete("EVENT_ID")
       end
     end
+  end
+
+  defp that_starts(calendar_event, start) do
+    %CalendarEvent{calendar_event | start: start}
   end
 end
