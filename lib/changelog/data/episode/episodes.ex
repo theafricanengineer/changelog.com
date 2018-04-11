@@ -56,6 +56,9 @@ defmodule Changelog.Episodes do
     @calendar_service.update(event_id, calendar_event)
     {:ok, episode}
   end
+  defp update_calendar_event({:ok, episode = %Changelog.Episode{calendar_event_id: nil}}, %Ecto.Changeset{changes: %{recorded_at: recorded_at}}) when not is_nil(recorded_at) do
+    create_calendar_event({:ok, episode})
+  end
   defp update_calendar_event({:ok, episode}, _changeset), do: {:ok, episode}
 
   defp delete_calendar_event({:ok, episode = %Changelog.Episode{calendar_event_id: calendar_event_id}}) when not is_nil(calendar_event_id) do

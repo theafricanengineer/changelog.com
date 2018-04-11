@@ -87,6 +87,23 @@ defmodule Changelog.EpisodesTest do
         assert called CalendarService.update("EVENT_ID", expected_event)
       end
     end
+
+    test "a calendar event is created if recording time changes and there is no calendar event associated yet" do
+      one_hour_ago = hours_ago(1)
+      episode =
+        insert(:episode, calendar_event_id: nil)
+        |> Episode.preload_all
+      expected_event =
+        CalendarEvent.build_for(episode)
+        |> that_starts(one_hour_ago)
+
+      with_mock(CalendarService, [create: fn(_) -> {:ok, "EVENT_ID"} end]) do
+        {:ok, episode} = Episodes.update(%{recorded_at: one_hour_ago}, episode.podcast, episode.slug)
+
+        assert called CalendarService.create(expected_event)
+        assert episode.calendar_event_id == "EVENT_ID"
+      end
+    end
   end
 
   describe "when delete an episode" do
