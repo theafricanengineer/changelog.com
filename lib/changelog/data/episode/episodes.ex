@@ -22,6 +22,20 @@ defmodule Changelog.Episodes do
       |> delete_calendar_event
   end
 
+  def update(episode_params, podcast, slug) do
+    episode =
+      assoc(podcast, :episodes)
+      |> Repo.get_by!(slug: slug)
+      |> Episode.preload_all
+
+    changeset = Episode.admin_changeset(episode, episode_params)
+
+    case Repo.update(changeset) do
+      {:error, changeset} -> {:error, changeset, episode}
+      result -> result
+    end
+  end
+
   defp create_calendar_event({:ok, episode = %Changelog.Episode{recorded_at: recorded_at}}) when not is_nil(recorded_at) do
     calendar_event = episode
       |> Episode.preload_all

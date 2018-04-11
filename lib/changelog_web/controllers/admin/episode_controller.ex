@@ -114,19 +114,12 @@ defmodule ChangelogWeb.Admin.EpisodeController do
   end
 
   def update(conn, params = %{"id" => slug, "episode" => episode_params}, podcast) do
-    episode =
-      assoc(podcast, :episodes)
-      |> Repo.get_by!(slug: slug)
-      |> Episode.preload_all
-
-    changeset = Episode.admin_changeset(episode, episode_params)
-
-    case Repo.update(changeset) do
+    case Episodes.update(episode_params, podcast, slug) do
       {:ok, _episode} ->
         conn
         |> put_flash(:result, "success")
         |> redirect_next(params, admin_podcast_episode_path(conn, :index, podcast.slug))
-      {:error, changeset} ->
+      {:error, changeset, episode} ->
         conn
         |> put_flash(:result, "failure")
         |> render(:edit, episode: episode, changeset: changeset)
