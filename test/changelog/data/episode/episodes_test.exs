@@ -88,6 +88,28 @@ defmodule Changelog.EpisodesTest do
       end
     end
 
+    test "a calendar event is updated if hosts and guests changes" do
+      guest = insert(:person)
+      host = insert(:person)
+      episode =
+        insert(:episode, calendar_event_id: "EVENT_ID")
+        |> Episode.preload_all
+      expected_event =
+        CalendarEvent.build_for(episode)
+        |> with_attendee(host.email)
+        |> with_attendee(guest.email)
+
+      with_mock(CalendarService, [update: fn(_, _) -> {:ok} end]) do
+        episode_params = %{
+          episode_guests: [%{person_id: guest.id, position: 1}],
+          episode_hosts: [%{person_id: host.id, position: 1}]
+        }
+        Episodes.update(episode_params, episode.podcast, episode.slug)
+
+        assert called CalendarService.update("EVENT_ID", expected_event)
+      end
+    end
+
     test "a calendar event is created if recording time changes and there is no calendar event associated yet" do
       one_hour_ago = hours_ago(1)
       episode =
@@ -130,5 +152,9 @@ defmodule Changelog.EpisodesTest do
 
   defp that_starts(calendar_event, start) do
     %CalendarEvent{calendar_event | start: start}
+  end
+
+  defp with_attendee(calendar_event, email) do
+    %CalendarEvent{calendar_event | attendees: [%{email: email} | calendar_event.attendees]}
   end
 end

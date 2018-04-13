@@ -37,9 +37,7 @@ defmodule Changelog.Episodes do
   end
 
   defp create_calendar_event({:ok, episode = %Changelog.Episode{recorded_at: recorded_at}}) when not is_nil(recorded_at) do
-    calendar_event = episode
-      |> Episode.preload_all
-      |> CalendarEvent.build_for
+    calendar_event = build_calendar_event_from(episode)
 
     case @calendar_service.create(calendar_event) do
       {:ok, event_id} -> Episode.update_calendar_event_id(episode, event_id)
@@ -48,10 +46,14 @@ defmodule Changelog.Episodes do
   end
   defp create_calendar_event(result), do: result
 
-  defp update_calendar_event({:ok, episode = %Changelog.Episode{calendar_event_id: event_id}}, %Ecto.Changeset{changes: %{recorded_at: recorded_at}}) when not is_nil(event_id) and not is_nil(recorded_at) do
-    calendar_event = episode
-      |> Episode.preload_all
-      |> CalendarEvent.build_for
+  defp update_calendar_event({:ok, episode = %Changelog.Episode{calendar_event_id: event_id}}, %Ecto.Changeset{changes: %{recorded_at: _recorded_at}}) when not is_nil(event_id) do
+    calendar_event = build_calendar_event_from(episode)
+
+    @calendar_service.update(event_id, calendar_event)
+    {:ok, episode}
+  end
+  defp update_calendar_event({:ok, episode = %Changelog.Episode{calendar_event_id: event_id}}, %Ecto.Changeset{changes: %{episode_guests: _guests, episode_hosts: _hosts}}) when not is_nil(event_id) do
+    calendar_event = build_calendar_event_from(episode)
 
     @calendar_service.update(event_id, calendar_event)
     {:ok, episode}
@@ -66,4 +68,10 @@ defmodule Changelog.Episodes do
     {:ok, episode}
   end
   defp delete_calendar_event(result), do: result
+
+  defp build_calendar_event_from(episode) do
+    episode
+    |> Episode.preload_all
+    |> CalendarEvent.build_for
+  end
 end
