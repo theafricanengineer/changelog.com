@@ -202,6 +202,11 @@ defmodule Changelog.Episode do
     |> Repo.update
   end
 
+  def remove_calendar_event_id(episode) do
+    change(episode, calendar_event_id: nil)
+    |> Repo.update
+  end
+
   defp derive_bytes_and_duration(changeset) do
     if new_audio_file = get_change(changeset, :audio_file) do
       tagged_file = EpisodeView.audio_local_path(%{changeset.data | audio_file: new_audio_file})

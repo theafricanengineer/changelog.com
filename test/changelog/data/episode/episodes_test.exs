@@ -164,6 +164,19 @@ defmodule Changelog.EpisodesTest do
         assert episode.calendar_event_id == "EVENT_ID"
       end
     end
+
+    test "a calendar event is removed if recording time is cancelled" do
+      episode =
+        insert(:episode, calendar_event_id: "EVENT_ID", recorded_at: hours_ago(1))
+        |> Episode.preload_all
+
+      with_mock(CalendarService, [delete: fn(_) -> {:ok} end]) do
+        {:ok, episode} = Episodes.update(%{recorded_at: nil}, episode.podcast, episode.slug)
+
+        assert called CalendarService.delete("EVENT_ID")
+        assert episode.calendar_event_id == nil
+      end
+    end
   end
 
   describe "when delete an episode" do
