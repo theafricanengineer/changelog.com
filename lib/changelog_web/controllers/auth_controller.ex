@@ -8,7 +8,8 @@ defmodule ChangelogWeb.AuthController do
   plug Ueberauth
 
   def new(conn, %{"auth" =>  %{"email" => email}}) do
-    if person = Repo.one(from p in Person, where: p.email == ^email) do
+
+    if person = Repo.get_by(Person, email: email) do
       person = Person.refresh_auth_token(person)
       Email.sign_in(person) |> Mailer.deliver_later
       render(conn, "new.html", person: person)
@@ -24,8 +25,7 @@ defmodule ChangelogWeb.AuthController do
   end
 
   def create(conn, %{"token" => token}) do
-    [email, auth_token] = Person.decoded_auth(token)
-    person = Repo.get_by(Person, email: email, auth_token: auth_token)
+    person = Person.get_by_encoded_auth(token)
 
     if person && Timex.before?(Timex.now, person.auth_token_expires_at) do
       sign_in_and_redirect(conn, person, home_path(conn, :show))
@@ -67,7 +67,7 @@ defmodule ChangelogWeb.AuthController do
   end
 
   defp sign_in_and_redirect(conn, person, route) do
-    Repo.update(Person.sign_in_changeset(person))
+    Repo.update(Person.sign_in_changes(person))
 
     conn
     |> assign(:current_user, person)

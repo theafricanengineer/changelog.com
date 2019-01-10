@@ -27,13 +27,13 @@ defmodule Changelog.PersonTest do
     refute Map.has_key?(changeset.changes, :avatar)
   end
 
-  test "encoded_auth and decoded_auth" do
+  test "encoded_auth and decoded_data" do
     user = %Person{email: "jenny@hits.com", auth_token: "8675309"}
     {:ok, encoded} = Person.encoded_auth(user)
 
     assert encoded == "6A656E6E7940686974732E636F6D7C38363735333039"
 
-    assert ["jenny@hits.com", "8675309"] = Person.decoded_auth(encoded)
+    assert ["jenny@hits.com", "8675309"] = Person.decoded_data(encoded)
   end
 
   describe "get_by_ueberauth" do
@@ -59,6 +59,15 @@ defmodule Changelog.PersonTest do
 
     test "it returns nil when no provider match" do
       assert Person.get_by_ueberauth(%{}) == nil
+    end
+  end
+
+  describe "sans_fake_data" do
+    test "scrubs name and handle if name came from Faker" do
+      person = Person.with_fake_data(build(:person))
+      sans = Person.sans_fake_data(person)
+      assert is_nil(sans.name)
+      assert is_nil(sans.handle)
     end
   end
 end

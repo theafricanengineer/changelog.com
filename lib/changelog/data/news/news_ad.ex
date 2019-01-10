@@ -26,13 +26,15 @@ defmodule Changelog.NewsAd do
 
   def changeset(ad, attrs \\ %{}) do
     ad
-    |> cast(attrs, ~w(url headline story active newsletter delete))
-    |> cast_attachments(attrs, ~w(image))
+    |> cast(attrs, [:url, :headline, :story, :active, :newsletter, :delete])
+    |> cast_attachments(attrs, [:image])
     |> validate_required([:url, :headline])
     |> validate_format(:url, Regexp.http, message: Regexp.http_message)
     |> foreign_key_constraint(:sponsorship_id)
     |> mark_for_deletion()
   end
+
+  def active_first(query \\ __MODULE__), do: from(q in query, order_by: [desc: :newsletter, desc: :active])
 
   def preload_all(ad) do
     ad
@@ -69,13 +71,5 @@ defmodule Changelog.NewsAd do
     ad.sponsorship
     |> change(%{impression_count: ad.sponsorship.impression_count + 1})
     |> Repo.update!
-  end
-
-  defp mark_for_deletion(changeset) do
-    if get_change(changeset, :delete) do
-      %{changeset | action: :delete}
-    else
-      changeset
-    end
   end
 end

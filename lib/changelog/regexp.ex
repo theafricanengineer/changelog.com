@@ -1,33 +1,17 @@
 defmodule Changelog.Regexp do
-  def http do
-    ~r/^https?:\/\//
-  end
+  def email, do: ~r/^\S+@\S+\.\S+$/
 
-  def http_message do
-    "must include http(s)://"
-  end
+  def http, do: ~r/^https?:\/\//
 
-  def tag do
-    ~r/(?<open><\/?)(?<tag>.*?)(?<close>>)/
-  end
+  def http_message, do: "must include http(s)://"
 
-  def tag(name) do
-    ~r/(?<open><\/?)#{name}(?<close>>)/
-  end
+  def tag, do: ~r/(?<open><\/?)(?<tag>.*?)(?<close>>)/
 
-  def slug do
-    ~r/\A[a-z|0-9|_|-]+\z/
-  end
+  def tag(name), do: ~r/(?<open><\/?)#{name}(?<close>>)/
 
-  def slug_message do
-    "valid chars: a-z, 0-9, -, _"
-  end
+  def slug, do: ~r/\A[a-z|0-9|_|-]+\z/
 
-  def timestamp do
-    ~r/(\d\d:)?(\d\d?:)(\d\d)(\.\d\d?)?/
-  end
+  def slug_message, do: "valid chars: a-z, 0-9, -, _"
 
-  def transcript_slugs do
-    ~r/(?<podcast>.*)\/.*-(?<episode>\w+).md/
-  end
+  def timestamp, do: ~r/(\d\d:)?(\d\d?:)(\d\d)(\.\d\d?)?/
 end

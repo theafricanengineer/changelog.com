@@ -4,8 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#59B287">
     <title><%= page_title(assigns) %></title>
-    <link rel="canonical" content="<%= canonical_url(@conn) %>">
+    <link rel="canonical" href="<%= canonical_url(@conn) %>">
     <meta name="description" content="<%= description(assigns) %>">
     <meta name="copyright" content="Changelog Media LLC">
   <% twitter_card_type = twitter_card_type(assigns) %>
@@ -41,6 +42,7 @@
   <% end %>
     <link href="<%= json_feed_url(@conn, :news) %>" rel="alternate" title="JSON News Feed" type="application/json">
     <link rel="stylesheet" href="<%= static_url(@conn, "/css/app.css") %>">
+    <link rel="manifest" href="<%= static_url(@conn, "/manifest.json") %>">
     <script defer src="<%= static_url(@conn, "/js/app.js") %>"></script>
     <%= render("_head_scripts.html", assigns) %>
    <meta property="csrf" content="<%= get_csrf_token() %>">

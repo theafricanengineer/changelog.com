@@ -2,7 +2,7 @@ defmodule Changelog.Episode do
   use Changelog.Data, default_sort: :published_at
 
   alias Changelog.{EpisodeHost, EpisodeGuest, EpisodeTopic, EpisodeStat,
-                   EpisodeSponsor, Files, Podcast, Regexp, Transcripts}
+                   EpisodeSponsor, Files, NewsItem, Podcast, Regexp, Transcripts}
   alias ChangelogWeb.{EpisodeView, TimeView}
 
   schema "episodes" do
@@ -10,8 +10,7 @@ defmodule Changelog.Episode do
     field :guid, :string
 
     field :title, :string
-    field :headline, :string
-    field :subheadline, :string
+    field :subtitle, :string
 
     field :featured, :boolean, default: false
     field :highlight, :string
@@ -21,8 +20,8 @@ defmodule Changelog.Episode do
     field :notes, :string
 
     field :published, :boolean, default: false
-    field :published_at, Timex.Ecto.DateTime
-    field :recorded_at, Timex.Ecto.DateTime
+    field :published_at, :utc_datetime
+    field :recorded_at, :utc_datetime
     field :recorded_live, :boolean, default: false
 
     field :audio_file, Files.Audio.Type
@@ -50,7 +49,7 @@ defmodule Changelog.Episode do
   end
 
   def distinct_podcast(query),                       do: from(q in query, distinct: q.podcast_id)
-  def featured(query \\ __MODULE__),                 do: from(q in query, where: q.featured == true, where: not(is_nil(q.highlight)))
+  def featured(query \\ __MODULE__),                 do: from(q in query, where: q.featured == true)
   def next_after(query \\ __MODULE__, episode),      do: from(q in query, where: q.published_at > ^episode.published_at)
   def previous_to(query \\ __MODULE__, episode),     do: from(q in query, where: q.published_at < ^episode.published_at)
   def published(query \\ __MODULE__),                do: from(q in query, where: q.published, where: q.published_at <= ^Timex.now)
@@ -65,7 +64,7 @@ defmodule Changelog.Episode do
   def with_podcast_slug(query \\ __MODULE__, slug),  do: from(q in query, join: p in Podcast, where: q.podcast_id == p.id, where: p.slug == ^slug)
 
   def is_public(episode, as_of \\ Timex.now) do
-    is_published(episode) && episode.published_at <= as_of
+    is_published(episode) && Timex.before?(episode.published_at, as_of)
   end
 
   def is_published(episode), do: episode.published
@@ -83,11 +82,12 @@ defmodule Changelog.Episode do
 
   def admin_changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, ~w(slug title published featured headline subheadline highlight subhighlight summary notes published_at recorded_at recorded_live guid))
-    |> cast_attachments(params, ~w(audio_file))
+    |> cast(params, [:slug, :title, :subtitle, :published, :featured,
+                     :highlight, :subhighlight, :summary, :notes, :published_at,
+                     :recorded_at, :recorded_live, :guid])
+    |> cast_attachments(params, [:audio_file])
     |> validate_required([:slug, :title, :published, :featured])
     |> validate_format(:slug, Regexp.slug, message: Regexp.slug_message)
-    |> validate_featured_has_highlight
     |> validate_published_has_published_at
     |> unique_constraint(:slug, name: :episodes_slug_podcast_id_index)
     |> cast_assoc(:episode_hosts)
@@ -96,6 +96,18 @@ defmodule Changelog.Episode do
     |> cast_assoc(:episode_topics)
     |> derive_bytes_and_duration
   end
+
+  def load_news_item(episode) do
+    item =
+      episode
+      |> NewsItem.with_episode()
+      |> Repo.one()
+      |> NewsItem.load_object(episode)
+
+    Map.put(episode, :news_item, item)
+  end
+
+  def object_id(episode), do: "#{episode.podcast.slug}:#{episode.slug}"
 
   def participants(episode) do
     episode =
@@ -184,6 +196,12 @@ defmodule Changelog.Episode do
     |> Repo.update!
   end
 
+  def update_notes(episode, text) do
+    episode
+    |> change(notes: text)
+    |> Repo.update!
+  end
+
   def update_transcript(episode, text) do
     parsed = Transcripts.Parser.parse_text(text, participants(episode))
 
@@ -214,17 +232,6 @@ defmodule Changelog.Episode do
       TimeView.seconds(duration)
     catch
       _all -> 0
-    end
-  end
-
-  defp validate_featured_has_highlight(changeset) do
-    featured = get_field(changeset, :featured)
-    highlight = get_field(changeset, :highlight)
-
-    if featured && is_nil(highlight) do
-      add_error(changeset, :highlight, "can't be blank when featured")
-    else
-      changeset
     end
   end
 
