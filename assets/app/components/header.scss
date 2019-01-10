@@ -1,9 +1,11 @@
 // Dark Headers
 .page-podcast-index,
 .page-podcast-show,
+.page-podcast-upcoming,
+.page-podcast-recommended,
+.page-podcast-show,
 .page-episode-show,
 .page-episode-preview,
-.page-post-show,
 .page-page-community,
 .page-page-sponsor,
 .page-topic-show,
@@ -54,7 +56,7 @@
 .header {
   @include position(fixed, 0 0 null);
   width: 100%;
-  z-index: 999;
+  z-index: 99999;
 
   &-container {
     background-color: rgba($white, .98);
@@ -250,6 +252,31 @@
           }
         }
 
+        &--live {
+          a {
+            color: $red !important;
+            padding-left: 18px;
+
+            &:before {
+              content: none !important;
+            }
+
+            &:after {
+              @include position(absolute, 50% null null 0);
+              $size: 11px;
+              content: "";
+              animation: pulse 4s infinite 1s;
+              background: $red;
+              border-radius: $size;
+              box-shadow: 0 0 0 0 rgba($red, .5);
+              display: block;
+              height: $size;
+              width: $size;
+              margin-top: -6px;
+            }
+          }
+        }
+
         &.is-desktop_only {
           display: none;
           @include breakpoint(mobile) { display: block; }
@@ -306,12 +333,14 @@
       color: $black;
       font-size: 13px;
       font-weight: 500;
-      line-height: 1.125em;
-      padding: 9px 10px;
-      width: 160px;
+      height: 38px;
+      line-height: 1;
+      min-width: 160px;
+      padding: 10px;
 
       &::placeholder {
         color: $medium-grey;
+        line-height: 1.5;
         transition: opacity .1s ease-in-out;
       }
 

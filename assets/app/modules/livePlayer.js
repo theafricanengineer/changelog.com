@@ -17,10 +17,12 @@ export default class LivePlayer {
   check() {
     this.container = u(this.selector);
 
+    // are we on /live?
     if (this.container.length) {
       this.attach();
     } else {
       this.detach();
+      this.checkStatusOnce();
     }
   }
 
@@ -40,17 +42,10 @@ export default class LivePlayer {
   }
 
   detach() {
-    if (!this.isAttached) {
-      return false;
-    }
-
+    if (!this.isAttached) return false;
     // events
     this.playButton.off("click");
     clearInterval(this.monitorId);
-    // ui
-    this.liveViewers.destroy();
-    this.status.destroy();
-    this.streamSrc.destroy();
   }
 
   loadUI() {
@@ -63,6 +58,16 @@ export default class LivePlayer {
       this.status.text("Upcoming");
       this.container.addClass("is-upcoming");
     }
+  }
+
+  checkStatusOnce() {
+    ajax("/live/status", {}, (error, data) => {
+      if (data.streaming) {
+        this.showLiveIndicator();
+      } else {
+        this.hideLiveIndicator();
+      }
+    });
   }
 
   monitorStatus() {
@@ -109,12 +114,23 @@ export default class LivePlayer {
   }
 
   play() {
-    this.audio.play();
-    this.container.addClass("is-playing").removeClass("is-paused is-upcoming");
+    this.audio.play().then(_ => {
+      this.container.addClass("is-playing").removeClass("is-paused is-upcoming");
+    }).catch(error => {
+      console.log("failed to play", error);
+    });
   }
 
   pause() {
     this.audio.pause();
     this.container.addClass("is-paused").removeClass("is-playing is-upcoming");
+  }
+
+  showLiveIndicator() {
+    u(".js-live-indicator").removeClass("is-hidden");
+  }
+
+  hideLiveIndicator() {
+   u(".js-live-indicator").addClass("is-hidden");
   }
 }

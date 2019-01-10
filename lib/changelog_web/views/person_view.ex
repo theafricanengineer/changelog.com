@@ -1,7 +1,7 @@
 defmodule ChangelogWeb.PersonView do
   use ChangelogWeb, :public_view
 
-  alias Changelog.{Files, Person}
+  alias Changelog.{Files, Person, Podcast}
   alias ChangelogWeb.{Endpoint, SharedView, PodcastView}
 
   def avatar_path(person, version) do
@@ -56,12 +56,10 @@ defmodule ChangelogWeb.PersonView do
   def first_name(person) do
     person.name
     |> String.split(" ")
-    |> List.first
+    |> List.first()
   end
 
-  def handle(person) do
-    "@" <> person.handle
-  end
+  def handle(person), do: person.handle
 
   def is_profile_complete(person) do
     !!(person.bio && person.website && person.location)
@@ -73,6 +71,8 @@ defmodule ChangelogWeb.PersonView do
       _else -> false
     end
   end
+
+  def is_staff(person), do: String.match?(person.email, ~r/@changelog.com/)
 
   def list_of_links(person) do
     [%{value: person.twitter_handle, text: "Twitter", url: twitter_url(person.twitter_handle)},
